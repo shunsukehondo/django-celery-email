@@ -21,8 +21,8 @@ if 'base' in TASK_CONFIG and isinstance(TASK_CONFIG['base'], string_types):
     TASK_CONFIG['base'] = import_string(TASK_CONFIG['base'])
 
 
-@shared_task(**TASK_CONFIG)
-def send_emails(messages, backend_kwargs=None, **kwargs):
+@shared_task(bind=True, max_retries=3, **TASK_CONFIG)
+def send_emails(self, messages, backend_kwargs=None, **kwargs):
     # backward compat: handle **kwargs and missing backend_kwargs
     combined_kwargs = {}
     if backend_kwargs is not None:
@@ -41,6 +41,8 @@ def send_emails(messages, backend_kwargs=None, **kwargs):
         conn.open()
     except Exception:
         logger.exception("Cannot reach CELERY_EMAIL_BACKEND %s", settings.CELERY_EMAIL_BACKEND)
+        # No retry here. It's no use.
+        raise e
 
     messages_sent = 0
 
@@ -51,11 +53,12 @@ def send_emails(messages, backend_kwargs=None, **kwargs):
                 messages_sent += sent
             logger.debug("Successfully sent email message to %r.", message['to'])
         except Exception as e:
+            backoff = 2 ** self.request.retries
             # Not expecting any specific kind of exception here because it
             # could be any number of things, depending on the backend
-            logger.warning("Failed to send email message to %r, retrying. (%r)",
-                           message['to'], e)
-            send_emails.retry([[message], combined_kwargs], exc=e, throw=False)
+            logger.warning("Failed to send email message to %r, retrying after %d seconds. [retry count %r], (%r)",
+                           message['to'], backoff, self.request.retries, e)
+            send_emails.retry(args=[[message], combined_kwargs], countdown=backoff, exc=e, throw=True)
 
     conn.close()
     return messages_sent
@@ -70,3 +73,4 @@ try:
     logger = get_task_logger(__name__)
 except ImportError:
     logger = send_emails.get_logger()
+
