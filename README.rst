@@ -7,6 +7,9 @@ django-celery-email - A Celery-backed Django Email Backend
 .. image:: https://img.shields.io/pypi/v/django-celery-email.svg
     :target: https://pypi.python.org/pypi/django-celery-email
 
+Improved exception handling from the original one.
+See tasks.py.
+
 A `Django`_ email backend that uses a `Celery`_ queue for out-of-band sending
 of the messages.
 
@@ -18,8 +21,8 @@ of the messages.
 	This version requires the following versions:
 
 	* Python 2.7 and Python >= 3.4
-	* Django 1.8, 1.10, 1.11, 2.0
-	* Celery 4.0
+	* Django >= 2.1.5
+	* Celery 4.2
 
 Using django-celery-email
 =========================
