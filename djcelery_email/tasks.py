@@ -39,7 +39,7 @@ def send_emails(self, messages, backend_kwargs=None, **kwargs):
     conn = get_connection(backend=settings.CELERY_EMAIL_BACKEND, **combined_kwargs)
     try:
         conn.open()
-    except Exception:
+    except Exception as e:
         logger.exception("Cannot reach CELERY_EMAIL_BACKEND %s", settings.CELERY_EMAIL_BACKEND)
         # No retry here. It's no use.
         raise e
