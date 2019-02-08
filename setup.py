@@ -30,8 +30,8 @@ setup(
     scripts=[],
     zip_safe=False,
     install_requires=[
-        'django>=1.8',
-        'celery>=4.0',
+        'django>=2.1.5',
+        'celery>=4.2',
         'django-appconf',
     ],
     classifiers=[
